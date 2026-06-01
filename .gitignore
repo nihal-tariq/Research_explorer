@@ -1,0 +1,31 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Data files (downloaded PDFs and extracted text) – too large for Git
+data/pdfs/
+data/text/
+
+# Logs
+*.log
+
+# Neo4j local dump (if any)
+*.db
+
+# OS metadata
+.DS_Store
