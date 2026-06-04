@@ -1,5 +1,6 @@
 """FastAPI application for Graph RAG queries."""
 from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from src.query_engine import GraphRAGQueryEngine
 import logging
@@ -7,29 +8,29 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Graph RAG API", description="Query research paper knowledge graph")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global engine
+    try:
+        engine = GraphRAGQueryEngine()
+        logger.info("GraphRAGQueryEngine initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize GraphRAGQueryEngine: {e}")
+    yield
+    # No explicit close needed for Neo4jGraph
 
-# Initialize query engine once at startup
+app = FastAPI(title="Graph RAG API", description="Query research paper knowledge graph", lifespan=lifespan)
+
+
 engine = None
 
 class QueryRequest(BaseModel):
     question: str
-    mode: str = "auto"  # "specific", "global", or "auto"
+    mode: str = "auto" 
 
 class QueryResponse(BaseModel):
     answer: str
     method_used: str
-
-@app.on_event("startup")
-async def startup_event():
-    global engine
-    engine = GraphRAGQueryEngine()
-    logger.info("GraphRAGQueryEngine initialized")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    if engine and engine.graph:
-        engine.graph.close()
 
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):

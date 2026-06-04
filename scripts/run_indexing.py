@@ -28,7 +28,7 @@ def main():
         for chunk in paper["chunks"]:
             triples = graph_builder.extract_from_chunk(chunk, paper_title)
             graph_builder.store_triples(triples)
-            time.sleep(1)  # avoid Gemini rate limits
+            time.sleep(1)  
         logger.info(f"Finished paper {paper_id}")
     
     graph_builder.close()

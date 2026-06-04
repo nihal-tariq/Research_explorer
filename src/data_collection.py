@@ -1,5 +1,10 @@
 """Download arXiv papers, extract text, and chunk."""
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import arxiv
+import time
 import pdfplumber
 from pathlib import Path
 from typing import List, Dict
@@ -20,18 +25,30 @@ def search_arxiv_papers(query: str, max_results: int = 30) -> List[Dict]:
     Returns:
         List of dicts with title, paper_id, pdf_url
     """
-    client = arxiv.Client()
+    client = arxiv.Client(
+        page_size=10,
+        delay_seconds=3.0,
+        num_retries=5,
+    )
     search = arxiv.Search(query=query, max_results=max_results, sort_by=arxiv.SortCriterion.Relevance)
     papers = []
-    for result in client.results(search):
-        papers.append({
-            "title": result.title,
-            "paper_id": result.entry_id.split("/")[-1],
-            "pdf_url": result.pdf_url,
-            "summary": result.summary
-        })
+    try:
+        for result in client.results(search):
+            papers.append({
+                "title": result.title,
+                "paper_id": result.entry_id.split("/")[-1],
+                "pdf_url": result.pdf_url,
+                "summary": result.summary
+            })
+            
+            time.sleep(1)
+    except Exception as e:
+        logger.error(f"arXiv search failed: {e}")
+        
+        return []
     logger.info(f"Found {len(papers)} papers")
     return papers
+    
 
 def download_pdf(paper_id: str, pdf_url: str) -> Path:
     """

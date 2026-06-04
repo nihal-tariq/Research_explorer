@@ -2,8 +2,7 @@
 import logging
 from typing import List, Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.graphs import Neo4jGraph
-from langchain.chains import GraphCypherQAChain
+from langchain_neo4j import Neo4jGraph, GraphCypherQAChain
 from langchain.schema import Document
 from src.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, GOOGLE_API_KEY
 import numpy as np
@@ -40,7 +39,8 @@ class GraphRAGQueryEngine:
         Returns:
             Answer string
         """
-        return self.cypher_chain.run(question)
+        result = self.cypher_chain.invoke({"query": question})
+        return result.get("result", "")
     
     def retrieve_community_summaries(self, question: str, top_k: int = 3) -> List[str]:
         """
